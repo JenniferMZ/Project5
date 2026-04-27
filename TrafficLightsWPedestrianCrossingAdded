@@ -1,145 +1,101 @@
-// Project 5: Traffic Lights - attempt with pedestrian crossing
+// Project 5: Traffic Lights
 
 #define westButton 3
 #define eastButton 13
 #define westRed 2
-#define westYellow 5
-#define westGreen 4
+#define westYellow 1
+#define westGreen 0
 #define eastRed 12
 #define eastYellow 11
 #define eastGreen 10
-#define pedWhite 9 
+#define pedWhite 9
 
-unsigned long previousMillis = 0;
-unsigned long blinkMillis = 0;
-int state = 0;      // 0: West Green, 1: West -> East, 2: East Green, 3: East -> West
-int subState = 0;   // 0: Flow, 1: Yellow, 2: Ped Crossing (All Red), 3: Blink Yellow
-int blinkCount = 0;
-bool transitionRequest = false;
+#define yellowBlinkTime 500
 
-void setup() {
-  pinMode(westButton, INPUT_PULLUP);
-  pinMode(eastButton, INPUT_PULLUP);
-  pinMode(westRed, OUTPUT); pinMode(westYellow, OUTPUT); pinMode(westGreen, OUTPUT);
-  pinMode(eastRed, OUTPUT); pinMode(eastYellow, OUTPUT); pinMode(eastGreen, OUTPUT);
-  pinMode(pedWhite, OUTPUT); 
-  setWestGreen();
+boolean trafficWest = true;
+int flowTime = 5000;    // FIX ME / from 10 000
+int changeDelay = 1000;  // FIX ME / from 2000
+
+
+void setup() 
+{
+  //set button and LED pins
+  pinMode(westButton, INPUT);
+  pinMode(westRed, OUTPUT);
+  pinMode(westYellow, OUTPUT);
+  pinMode(westGreen, OUTPUT);
+  pinMode(eastButton, INPUT);
+  pinMode(eastRed,OUTPUT);
+  pinMode(eastYellow, OUTPUT);
+  pinMode(eastGreen, OUTPUT);
+  pinMode(pedWhite, OUTPUT);
+
+  //set start state for each light
+  digitalWrite(westRed, LOW);
+  digitalWrite(westYellow, LOW);
+  digitalWrite(westGreen, HIGH);      // traffic West light is Green
+  digitalWrite(eastRed, HIGH);        // traffic East light is Red
+  digitalWrite(eastYellow, LOW);
+  digitalWrite(eastGreen, LOW);
+  digitalWrite(pedWhite, LOW);        // ped light is off
 }
 
-void loop() {
-  unsigned long currentMillis = millis();
 
-  // Check buttons
-  if (digitalRead(eastButton) == LOW && state == 0) transitionRequest = true;
-  if (digitalRead(westButton) == LOW && state == 2) transitionRequest = true;
-
-  if (transitionRequest) {
-    if (state == 0) westToEast(currentMillis);
-    if (state == 2) eastToWest(currentMillis);
-  }
-}
-
-void westToEast(unsigned long now) {
-  switch (subState) {
-    case 0: // Flow Time (10s)
-      if (now - previousMillis >= 10000) {
-        digitalWrite(westGreen, LOW);
+void loop() 
+{
+  if (digitalRead(westButton) == HIGH || digitalRead(eastButton) == HIGH)
+  {
+    if (trafficWest != true)
+    {
+      trafficWest = true;
+      delay (flowTime/2);   // 2.5sec delay between green and yellow
+      digitalWrite (eastGreen, LOW);
+      digitalWrite (eastYellow, HIGH);
+      delay(changeDelay);   // 1sec delay between yellow and red
+      digitalWrite (eastYellow, LOW);
+      digitalWrite (eastRed, HIGH);
+      digitalWrite (pedWhite, HIGH);  // turn on ped light
+      delay (flowTime);   // 5sec pedestrian walk gap
+      digitalWrite (pedWhite, LOW);   // turn off ped light, resume traffic
+      for (int a=0; a<5; a++)
+      {
+        digitalWrite (westYellow, LOW);
+        delay (yellowBlinkTime);
         digitalWrite(westYellow, HIGH);
-        subState = 1;
-        previousMillis = now;
+        delay (yellowBlinkTime);
       }
-      break;
-    case 1: // West Yellow (2s)
-      if (now - previousMillis >= 2000) {
-        digitalWrite(westYellow, LOW);
-        digitalWrite(westRed, HIGH); // West is Red
-        digitalWrite(eastRed, HIGH); // East is ALREADY Red
-        digitalWrite(pedWhite, HIGH); // Pedestrians go!
-        subState = 2;
-        previousMillis = now;
+      digitalWrite (westYellow, LOW);
+      digitalWrite (westRed, LOW);
+      digitalWrite (westGreen, HIGH);
+    }
+
+    else if (trafficWest == true)
+    {
+      trafficWest = false;
+      delay (flowTime/2);   // 2.5sec delay between green and yellow
+      digitalWrite (westGreen, LOW);
+      digitalWrite (westYellow, HIGH);
+      delay (changeDelay);   // 1sec delay between yellow and red
+      digitalWrite (westYellow, LOW);
+      digitalWrite (westRed, HIGH);
+      digitalWrite (pedWhite, HIGH);  // turn on ped light
+      delay (flowTime);   // 5sec pedestrian walk gap
+      digitalWrite (pedWhite, LOW);   // turn off ped light, resume traffic
+      for (int a=0; a<5; a++)
+      {
+        digitalWrite (eastYellow, LOW);
+        delay (yellowBlinkTime);
+        digitalWrite (eastYellow, HIGH);
+        delay (yellowBlinkTime);
       }
-      break;
-    case 2: // ALL RED / Pedestrian Walk (5s)
-      if (now - previousMillis >= 5000) {
-        digitalWrite(pedWhite, LOW);
-        subState = 3;
-        blinkCount = 0;
-        previousMillis = now;
-      }
-      break;
-    case 3: // Blinking East Yellow (Preparing East Green)
-      if (now - blinkMillis >= 500) {
-        blinkMillis = now;
-        digitalWrite(eastYellow, !digitalRead(eastYellow));
-        if (digitalRead(eastYellow) == LOW) blinkCount++; 
-      }
-      if (blinkCount >= 5) {
-        setEastGreen();
-        resetTransition();
-      }
-      break;
+      digitalWrite (eastYellow, LOW);
+      digitalWrite (eastRed, LOW);
+      digitalWrite (eastGreen, HIGH);
+    }
   }
-}
-
-void eastToWest(unsigned long now) {
-  switch (subState) {
-    case 0: // Flow Time (10s)
-      if (now - previousMillis >= 10000) {
-        digitalWrite(eastGreen, LOW);
-        digitalWrite(eastYellow, HIGH);
-        subState = 1;
-        previousMillis = now;
-      }
-      break;
-    case 1: // East Yellow (2s)
-      if (now - previousMillis >= 2000) {
-        digitalWrite(eastYellow, LOW);
-        digitalWrite(eastRed, HIGH); // East is Red
-        digitalWrite(westRed, HIGH); // West is ALREADY Red
-        digitalWrite(pedWhite, HIGH); // Pedestrians go!
-        subState = 2;
-        previousMillis = now;
-      }
-      break;
-    case 2: // ALL RED / Pedestrian Walk (5s)
-      if (now - previousMillis >= 5000) {
-        digitalWrite(pedWhite, LOW);
-        subState = 3;
-        blinkCount = 0;
-        previousMillis = now;
-      }
-      break;
-    case 3: // Blinking West Yellow (Preparing West Green)
-      if (now - blinkMillis >= 500) {
-        blinkMillis = now;
-        digitalWrite(westYellow, !digitalRead(westYellow));
-        if (digitalRead(westYellow) == LOW) blinkCount++; 
-      }
-      if (blinkCount >= 5) {
-        setWestGreen();
-        resetTransition();
-      }
-      break;
+  //if (digitalRead (eastButton) == HIGH)
+  {
+    
   }
-}
 
-void resetTransition() {
-  transitionRequest = false;
-  subState = 0;
-  blinkCount = 0;
-  digitalWrite(pedWhite, LOW);
-}
-
-void setWestGreen() {
-  digitalWrite(westRed, LOW); digitalWrite(westYellow, LOW); digitalWrite(westGreen, HIGH);
-  digitalWrite(eastRed, HIGH); digitalWrite(eastYellow, LOW); digitalWrite(eastGreen, LOW);
-  state = 0;
-  previousMillis = millis();
-}
-
-void setEastGreen() {
-  digitalWrite(westRed, HIGH); digitalWrite(westYellow, LOW); digitalWrite(westGreen, LOW);
-  digitalWrite(eastRed, LOW); digitalWrite(eastYellow, LOW); digitalWrite(eastGreen, HIGH);
-  state = 2;
-  previousMillis = millis();
 }
