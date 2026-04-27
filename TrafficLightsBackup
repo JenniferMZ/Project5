@@ -46,7 +46,7 @@ void setup()
   pinMode(eastYellow, OUTPUT);
   pinMode(eastGreen, OUTPUT);
 
-  setWestGreen(); // Initial state, ADDED, TEST ME
+  bool setWestGreen(); // Initial state, ADDED, TEST ME
 
   /*
   TEMPORARILY REMOVED BLOCK
@@ -60,6 +60,22 @@ void setup()
   digitalWrite(eastGreen, LOW);
 */
 }
+
+
+  // ADDED CODE BLOCK BELOW
+  void handleTrafficChange(unsigned long now) 
+    {
+    if (now - previousMillis >= 10000) 
+      { previousMillis = now;
+       }
+    }
+
+void setWestGreen() 
+  {
+  digitalWrite(westRed, LOW); digitalWrite(westGreen, HIGH);
+  digitalWrite(eastRed, HIGH); digitalWrite(eastGreen, LOW);
+  }
+    // ADDED CODE BLOCK ABOVE, TEST ME
 
 
 void loop() 
@@ -124,22 +140,9 @@ void loop()
 
       // REPLACEMENT CONDITION BLOCK BELOW
       if (transitionRequest) {
-        handleTrafficChange(currentMillis);
+       int handleTrafficChange(currentMillis);
     }
   }
 
-  // ADDED CODE BLOCK BELOW
-  void handleTrafficChange(unsigned long now) 
-    {
-    if (now - previousMillis >= 10000) 
-      { previousMillis = now;
-       }
-    }
 
-void setWestGreen() 
-  {
-  digitalWrite(westRed, LOW); digitalWrite(westGreen, HIGH);
-  digitalWrite(eastRed, HIGH); digitalWrite(eastGreen, LOW);
-  }
-    // ADDED CODE BLOCK ABOVE, TEST ME
 }
