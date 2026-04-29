@@ -45,18 +45,61 @@ void loop()
 {
   if (digitalRead(westButton) == HIGH || digitalRead(eastButton) == HIGH)
   {
-    if (trafficWest != true)
+        if (trafficWest == true)
     {
-      trafficWest = true;
-      delay (flowTime/2);   // 2.5sec delay between green and yellow
-      digitalWrite (eastGreen, LOW);
-      digitalWrite (eastYellow, HIGH);
-      delay(changeDelay);   // 1sec delay between yellow and red
+      // trafficWest = false;                  // MOVED THIS LINE TO THE END OF THE IF STATEMENT
+      delay (changeDelay);                    // 1sec delay between button push and light change
+
+      digitalWrite (westGreen, LOW);
+      digitalWrite (westYellow, HIGH);       // light change from green to yellow
+      delay (flowTime/2);                    // 2.5sec delay 
+
+      digitalWrite (westYellow, LOW);
+      digitalWrite (westRed, HIGH);          // light change from yellow to red
+      delay (changeDelay);                   // 1sec delay
+
+      digitalWrite (pedWhite, HIGH);          // turn on ped light
+      delay (flowTime);                       // 5sec pedestrian walk gap
+      digitalWrite (pedWhite, LOW);           // turn off ped light, resume traffic
+
+ trafficWest = false;                        // MOVED FROM TOP OF IF STATEMENT
+
+/* remove the chunk below??
+      for (int a=0; a<5; a++)
+      {
+        digitalWrite (eastYellow, LOW);
+        delay (yellowBlinkTime);
+        digitalWrite (eastYellow, HIGH);
+        delay (yellowBlinkTime);
+      }
       digitalWrite (eastYellow, LOW);
-      digitalWrite (eastRed, HIGH);
-      digitalWrite (pedWhite, HIGH);  // turn on ped light
-      delay (flowTime);   // 5sec pedestrian walk gap
-      digitalWrite (pedWhite, LOW);   // turn off ped light, resume traffic
+      digitalWrite (eastRed, LOW);
+      digitalWrite (eastGreen, HIGH);         
+*/ }
+
+
+
+    else // if (trafficWest == false)        // I DON'T THINK THIS STATEMENT IS NEEEDED
+    {
+      // trafficWest = true;                  // MOVED TO END OF CONDITIONAL
+
+      delay (changeDelay);                     // 1sec delay between button push and light change
+
+      digitalWrite (eastGreen, LOW);
+      digitalWrite (eastYellow, HIGH);        // light change from green to yellow
+      delay(flowTime/2);                      // 2.5sec delay
+
+      digitalWrite (eastYellow, LOW);
+      digitalWrite (eastRed, HIGH);           // light change from yellow to red
+      delay (changeDelay);                    // 1sec delay 
+
+      digitalWrite (pedWhite, HIGH);          // turn on ped light
+      delay (flowTime);                       // 5sec pedestrian walk gap
+      digitalWrite (pedWhite, LOW);           // turn off ped light, resume traffic
+
+      trafficWest = true;                     // MOVED FROM BEGINNING OF CONDITIONAL  
+
+/* test without the chunk below
       for (int a=0; a<5; a++)
       {
         digitalWrite (westYellow, LOW);
@@ -68,34 +111,31 @@ void loop()
       digitalWrite (westRed, LOW);
       digitalWrite (westGreen, HIGH);
     }
+*/ }
 
-    else if (trafficWest == true)
-    {
-      trafficWest = false;
-      delay (flowTime/2);   // 2.5sec delay between green and yellow
-      digitalWrite (westGreen, LOW);
-      digitalWrite (westYellow, HIGH);
-      delay (changeDelay);   // 1sec delay between yellow and red
-      digitalWrite (westYellow, LOW);
-      digitalWrite (westRed, HIGH);
-      digitalWrite (pedWhite, HIGH);  // turn on ped light
-      delay (flowTime);   // 5sec pedestrian walk gap
-      digitalWrite (pedWhite, LOW);   // turn off ped light, resume traffic
-      for (int a=0; a<5; a++)
-      {
-        digitalWrite (eastYellow, LOW);
-        delay (yellowBlinkTime);
-        digitalWrite (eastYellow, HIGH);
-        delay (yellowBlinkTime);
-      }
-      digitalWrite (eastYellow, LOW);
-      digitalWrite (eastRed, LOW);
-      digitalWrite (eastGreen, HIGH);
-    }
-  }
-  //if (digitalRead (eastButton) == HIGH)
+
+if (trafficWest == true)                  // west was green
   {
-    
+  delay (flowTime);                       // 5sec delay
+  digitalWrite (westGreen, LOW);
+  digitalWrite (westYellow, HIGH);        // west light change from green to yellow
+  delay (flowTime/2);                      // 2.5sec delay
+
+  digitalWrite (westYellow, LOW);
+  digitalWrite (westRed, HIGH);            // west light change from yellow to red
+  digitalWrite (eastGreen, HIGH);          // east light green
+  trafficWest = false;
   }
 
-}
+else if (trafficWest == false)
+  {
+  delay (flowTime);                          // 5sec delay for traffic
+  digitalWrite (eastGreen, LOW);
+  digitalWrite (eastYellow, HIGH);           // east light change from green to yellow
+  delay (flowTime/2);                        // 2.5sec delay
+
+  digitalWrite (eastYellow, LOW);
+  digitalWrite (eastRed, HIGH);              // east light change from yellow to red
+  digitalWrite (westGreen, HIGH);            // west light green
+  trafficWest = true;
+  }
